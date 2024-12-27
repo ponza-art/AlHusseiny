@@ -4,52 +4,32 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true,
-        trim: true
+        required: [true, 'Please provide your name'],
+        trim: true,
+        minlength: [2, 'Name must be at least 2 characters long'],
+        maxlength: [50, 'Name cannot be more than 50 characters']
     },
     email: {
         type: String,
-        required: true,
+        required: [true, 'Please provide your email'],
         unique: true,
-        trim: true,
-        lowercase: true
+        lowercase: true,
+        trim: true
     },
     password: {
         type: String,
-        required: function() { return !this.googleId; }
-    },
-    googleId: {
-        type: String,
-        unique: true,
-        sparse: true
+        required: [true, 'Please provide a password'],
+        minlength: [6, 'Password must be at least 6 characters long']
     },
     role: {
         type: String,
         enum: ['user', 'admin'],
         default: 'user'
     },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
-    verificationToken: String,
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
-    address: [{
-        street: String,
-        city: String,
-        state: String,
-        country: String,
-        zipCode: String
-    }],
-    phone: String,
-    avatar: String,
     createdAt: {
         type: Date,
         default: Date.now
     }
-}, {
-    timestamps: true
 });
 
 // Hash password before saving
@@ -65,9 +45,9 @@ userSchema.pre('save', async function(next) {
     }
 });
 
-// Method to compare password
+// Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    return bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema); 

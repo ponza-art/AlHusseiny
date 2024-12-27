@@ -2,6 +2,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const { ExtractJwt } = require('passport-jwt');
+const crypto = require('crypto');
 const User = require('../models/User');
 
 module.exports = (passport) => {
@@ -23,7 +24,8 @@ module.exports = (passport) => {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/api/auth/google/callback'
+        callbackURL: `${process.env.API_URL}/api/auth/google/callback`,
+        scope: ['profile', 'email']
     }, async (accessToken, refreshToken, profile, done) => {
         try {
             let user = await User.findOne({ email: profile.emails[0].value });
@@ -33,7 +35,7 @@ module.exports = (passport) => {
                     name: profile.displayName,
                     email: profile.emails[0].value,
                     password: crypto.randomBytes(16).toString('hex'),
-                    isVerified: true // Google accounts are already verified
+                    isVerified: true
                 });
                 await user.save();
             }
