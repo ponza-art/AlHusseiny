@@ -1,12 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const authController = require('../../controllers/authController');
-const { isAuth } = require('../../middlewares/authMiddleware');
+const authController = require('../controllers/authController');
+const { isAuth } = require('../middlewares/authMiddleware');
+const { validateRegistration, validateLogin } = require('../utils/validators');
 
 // Regular auth routes
-router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/register', 
+    validateRegistration,
+    authController.register
+);
+
+router.post('/login',
+    validateLogin, 
+    authController.login
+);
+
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.get('/verify-email/:token', authController.verifyEmail);

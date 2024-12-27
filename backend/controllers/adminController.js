@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const Category = require('../models/Category');
 
 exports.getDashboardStats = async (req, res, next) => {
     try {
@@ -40,29 +39,10 @@ exports.getDashboardStats = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const { page = 1, limit = 10, search } = req.query;
-        const query = {};
-
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        const users = await User.find(query)
+        const users = await User.find()
             .select('-password')
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
             .sort('-createdAt');
-
-        const total = await User.countDocuments(query);
-
-        res.json({
-            users,
-            totalPages: Math.ceil(total / limit),
-            currentPage: page
-        });
+        res.json(users);
     } catch (error) {
         next(error);
     }
@@ -93,12 +73,10 @@ exports.getOrderStats = async (req, res, next) => {
             {
                 $group: {
                     _id: '$orderStatus',
-                    count: { $sum: 1 },
-                    totalAmount: { $sum: '$totalAmount' }
+                    count: { $sum: 1 }
                 }
             }
         ]);
-
         res.json(stats);
     } catch (error) {
         next(error);
@@ -112,7 +90,7 @@ exports.updateOrderStatus = async (req, res, next) => {
             req.params.id,
             { orderStatus },
             { new: true }
-        ).populate('user', 'name email');
+        );
 
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });

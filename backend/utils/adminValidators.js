@@ -1,25 +1,26 @@
 const Joi = require('joi');
 
-exports.validateUserRoleUpdate = (data) => {
+exports.validateAdminAction = (req, res, next) => {
     const schema = Joi.object({
         role: Joi.string().valid('user', 'admin').required()
     });
-    return schema.validate(data);
+    
+    const { error } = schema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+    next();
 };
 
-exports.validateOrderStatusUpdate = (data) => {
-    const schema = Joi.object({
-        orderStatus: Joi.string()
-            .valid('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED')
-            .required()
-    });
-    return schema.validate(data);
-};
-
-exports.validateDateRange = (data) => {
+exports.validateDateRange = (req, res, next) => {
     const schema = Joi.object({
         startDate: Joi.date().required(),
         endDate: Joi.date().min(Joi.ref('startDate')).required()
     });
-    return schema.validate(data);
+    
+    const { error } = schema.validate(req.query);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+    next();
 }; 

@@ -110,4 +110,40 @@ exports.getCurrentUser = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Error fetching user data' });
     }
+};
+
+exports.forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        // TODO: Implement forgot password logic
+        res.status(200).json({ 
+            message: 'If a user with that email exists, a password reset link will be sent.' 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { token, newPassword } = req.body;
+        // TODO: Implement password reset logic
+        res.status(200).json({ 
+            message: 'Password has been reset successfully.' 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.verifyEmail = async (req, res, next) => {
+    try {
+        const { token } = req.params;
+        // TODO: Implement email verification logic
+        res.status(200).json({ 
+            message: 'Email verified successfully.' 
+        });
+    } catch (error) {
+        next(error);
+    }
 }; 

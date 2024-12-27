@@ -5,14 +5,16 @@ const morgan = require("morgan");
 const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 // Import routes
-const authRoutes = require("../routes/authRoutes");
+const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const adminRoutes = require("../routes/adminRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const logger = require("./utils/logger");
@@ -39,13 +41,32 @@ app.use(session({
 // Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
-require("../config/passport")(passport);
+require("./config/passport")(passport);
 
 // Connect to MongoDB
 mongoose
     .connect(process.env.MONGO_URI)
     .then(() => logger.info("MongoDB connected"))
     .catch((err) => logger.error("MongoDB connection error:", err));
+
+// Security middleware
+app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
+
+// Add request logging
+app.use((req, res, next) => {
+    logger.info(`${req.method} ${req.url}`, {
+        ip: req.ip,
+        user: req.user?.id
+    });
+    next();
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
