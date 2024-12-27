@@ -30,25 +30,6 @@ app.use(cors({
     credentials: true
 }));
 
-// Session configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' }
-}));
-
-// Passport initialization
-app.use(passport.initialize());
-app.use(passport.session());
-require("./config/passport")(passport);
-
-// Connect to MongoDB
-mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => logger.info("MongoDB connected"))
-    .catch((err) => logger.error("MongoDB connection error:", err));
-
 // Security middleware
 app.use(helmet());
 
@@ -58,6 +39,16 @@ const limiter = rateLimit({
     max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api/', limiter);
+
+// Connect to MongoDB
+mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => logger.info("MongoDB connected"))
+    .catch((err) => logger.error("MongoDB connection error:", err));
+
+// Initialize passport without sessions (using JWT instead)
+app.use(passport.initialize());
+require("./config/passport")(passport);
 
 // Add request logging
 app.use((req, res, next) => {
