@@ -82,12 +82,12 @@ export default function ProductDetails() {
 
                     {/* Stock Status */}
                     <div className="flex items-center space-x-2">
-                        <div className={`badge ${product.inStock ? 'badge-success' : 'badge-error'}`}>
-                            {product.inStock ? 'In Stock' : 'Out of Stock'}
+                        <div className={`badge ${product.stock ? 'badge-success' : 'badge-error'}`}>
+                            {product.stock ? 'In Stock' : 'Out of Stock'}
                         </div>
-                        {product.inStock && (
+                        {product.stock && (
                             <span className="text-sm text-gray-500">
-                                ({product.stockQuantity} units available)
+                                ({product.stock} units available)
                             </span>
                         )}
                     </div>
@@ -125,7 +125,7 @@ export default function ProductDetails() {
                         <Button 
                             variant="primary"
                             fullWidth
-                            disabled={!product.inStock}
+                            disabled={!product.stock}
                             onClick={() => {
                                 addToCart(product, quantity);
                                 navigate('/cart');

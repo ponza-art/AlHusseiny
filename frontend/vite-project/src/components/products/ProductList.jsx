@@ -38,6 +38,15 @@ export default function ProductList({ category = null }) {
     if (loading) return <div className="flex justify-center p-8"><span className="loading loading-spinner loading-lg"></span></div>;
     if (error) return <div className="alert alert-error">{error}</div>;
 
+    if (products.length === 0) {
+        return (
+            <div className="text-center py-8">
+                <h2 className="text-xl font-semibold">No products found</h2>
+                {category && <p className="text-gray-600">Try searching in a different category</p>}
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">

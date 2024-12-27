@@ -18,7 +18,12 @@ export default function ProductCard({ product }) {
                 <h2 className="card-title">{product.name}</h2>
                 <p className="text-gray-600 line-clamp-2">{product.description}</p>
                 <div className="flex justify-between items-center mt-4">
-                    <span className="text-xl font-bold">${product.price}</span>
+                    <div>
+                        <span className="text-xl font-bold">${product.price}</span>
+                        <div className={`badge ${product.stock ? 'badge-success' : 'badge-error'} ml-2`}>
+                            {product.stock ? 'In Stock' : 'Out of Stock'}
+                        </div>
+                    </div>
                     <div className="card-actions">
                         <Link 
                             to={`/product/${product._id}`} 
@@ -29,6 +34,7 @@ export default function ProductCard({ product }) {
                         <button 
                             className="btn btn-primary btn-sm"
                             onClick={() => addToCart(product)}
+                            disabled={!product.stock}
                         >
                             Add to Cart
                         </button>
