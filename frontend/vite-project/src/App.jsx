@@ -15,6 +15,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import OrderSuccess from './pages/OrderSuccess';
+import Orders from './pages/Orders';
 
 export default function App() {
     return (
@@ -35,10 +37,13 @@ export default function App() {
                                 <Route element={<ProtectedRoute />}>
                                     <Route path="/checkout" element={<Checkout />} />
                                     <Route path="/profile" element={<Profile />} />
+                                    <Route path="/orders" element={<Orders />} />
                                 </Route>
 
                                 {/* 404 Page */}
                                 <Route path="*" element={<NotFound />} />
+
+                                <Route path="/order-success/:orderId" element={<OrderSuccess />} />
                             </Routes>
                         </Layout>
                     </CartProvider>

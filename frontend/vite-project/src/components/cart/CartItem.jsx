@@ -8,13 +8,13 @@ export default function CartItem({ item }) {
         <div className="card card-side bg-base-100 shadow-xl mb-4">
             <figure className="w-48">
                 <img 
-                    src={item.images[0]} 
-                    alt={item.name} 
+                    src={item.product.images[0]} 
+                    alt={item.product.name} 
                     className="h-full w-full object-cover"
                 />
             </figure>
             <div className="card-body">
-                <h2 className="card-title">{item.name}</h2>
+                <h2 className="card-title">{item.product.name}</h2>
                 <p className="text-gray-600">${item.price}</p>
                 
                 <div className="flex items-center gap-4">

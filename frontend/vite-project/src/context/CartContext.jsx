@@ -8,45 +8,94 @@ export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState([]);
     const [total, setTotal] = useState(0);
 
+    // Fetch cart on mount
     useEffect(() => {
-        calculateTotal();
-    }, [cart]);
+        fetchCart();
+    }, []);
 
-    const calculateTotal = () => {
-        const newTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        setTotal(newTotal);
+    const fetchCart = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/cart', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            setCart(data.items || []);
+            setTotal(data.totalAmount || 0);
+        } catch (error) {
+            console.error('Error fetching cart:', error);
+        }
     };
 
-    const addToCart = (product, quantity = 1) => {
-        setCart(prevCart => {
-            const existingItem = prevCart.find(item => item.id === product.id);
-            if (existingItem) {
-                return prevCart.map(item =>
-                    item.id === product.id
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item
-                );
-            }
-            return [...prevCart, { ...product, quantity }];
-        });
+    const addToCart = async (product, quantity = 1) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    productId: product._id,
+                    quantity
+                })
+            });
+            const data = await response.json();
+            setCart(data.items || []);
+            setTotal(data.totalAmount || 0);
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+        }
     };
 
-    const removeFromCart = (productId) => {
-        setCart(prevCart => prevCart.filter(item => item.id !== productId));
+    const updateQuantity = async (productId, quantity) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/cart/items/${productId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ quantity })
+            });
+            const data = await response.json();
+            setCart(data.items || []);
+            setTotal(data.totalAmount || 0);
+        } catch (error) {
+            console.error('Error updating cart:', error);
+        }
     };
 
-    const updateQuantity = (productId, quantity) => {
-        setCart(prevCart =>
-            prevCart.map(item =>
-                item.id === productId
-                    ? { ...item, quantity: Math.max(0, quantity) }
-                    : item
-            )
-        );
+    const removeFromCart = async (productId) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/cart/items/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            setCart(data.items || []);
+            setTotal(data.totalAmount || 0);
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+        }
     };
 
-    const clearCart = () => {
-        setCart([]);
+    const clearCart = async () => {
+        try {
+            await fetch('http://localhost:5000/api/cart', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            setCart([]);
+            setTotal(0);
+        } catch (error) {
+            console.error('Error clearing cart:', error);
+        }
     };
 
     return (

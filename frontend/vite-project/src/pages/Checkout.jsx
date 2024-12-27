@@ -13,10 +13,19 @@ export default function Checkout() {
         country: '',
         phone: ''
     });
+    const [paymentMethod, setPaymentMethod] = useState('CARD');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Add cart validation
+        if (!cart || cart.length === 0) {
+            alert('Your cart is empty. Please add items before checking out.');
+            navigate('/products');  // Redirect to products page
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -28,9 +37,14 @@ export default function Checkout() {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({
-                    items: cart,
-                    shippingAddress,
-                    totalAmount: total
+                    shippingAddress: {
+                        street: shippingAddress.street,
+                        city: shippingAddress.city,
+                        state: shippingAddress.state,
+                        zipCode: shippingAddress.zipCode,
+                        country: shippingAddress.country
+                    },
+                    paymentMethod: paymentMethod
                 })
             });
 
@@ -40,27 +54,41 @@ export default function Checkout() {
                 throw new Error(data.message);
             }
 
-            // Initialize payment
-            const paymentResponse = await fetch('http://localhost:5000/api/payments/initiate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    orderId: data._id
-                })
-            });
-
-            const paymentData = await paymentResponse.json();
-
-            // Clear cart and redirect to payment
+            // Clear cart in context after successful order
             clearCart();
-            navigate(paymentData.paymentUrl);
+            
+            // Redirect to success page or payment
+            if (data.paymentMethod === 'CARD') {
+                // Initiate payment with return URL
+                const returnUrl = `${window.location.origin}/orders`; // Return to orders page
+                const paymentResponse = await fetch('http://localhost:5000/api/payments/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        orderId: data._id,
+                        returnUrl: returnUrl
+                    })
+                });
+
+                const paymentData = await paymentResponse.json();
+
+                if (!paymentResponse.ok) {
+                    throw new Error(paymentData.message);
+                }
+
+                // Redirect to Paymob iframe with return URL
+                window.location.href = `https://accept.paymob.com/api/acceptance/iframes/${paymentData.iframeId}?payment_token=${paymentData.paymentKey}`;
+            } else {
+                // For non-card payments, go to orders page directly
+                navigate('/orders');
+            }
 
         } catch (error) {
             console.error('Checkout error:', error);
-            alert('Checkout failed. Please try again.');
+            alert(error.message || 'Checkout failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -142,19 +170,51 @@ export default function Checkout() {
 
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text">Phone</span>
+                                    <span className="label-text">Country</span>
                                 </label>
                                 <input
-                                    type="tel"
+                                    type="text"
                                     className="input input-bordered"
-                                    value={shippingAddress.phone}
+                                    value={shippingAddress.country}
                                     onChange={(e) => setShippingAddress({
                                         ...shippingAddress,
-                                        phone: e.target.value
+                                        country: e.target.value
                                     })}
                                     required
                                 />
                             </div>
+                        </div>
+
+                        <div className="form-control">
+                            <label className="label">
+                                <span className="label-text">Phone</span>
+                            </label>
+                            <input
+                                type="tel"
+                                className="input input-bordered"
+                                value={shippingAddress.phone}
+                                onChange={(e) => setShippingAddress({
+                                    ...shippingAddress,
+                                    phone: e.target.value
+                                })}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-control">
+                            <label className="label">
+                                <span className="label-text">Payment Method</span>
+                            </label>
+                            <select 
+                                className="select select-bordered"
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                required
+                            >
+                                <option value="CARD">Card</option>
+                                <option value="CASH">Cash</option>
+                                <option value="WALLET">Wallet</option>
+                            </select>
                         </div>
 
                         <button 
