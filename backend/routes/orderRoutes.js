@@ -2,24 +2,19 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { isAuth } = require('../middlewares/authMiddleware');
-const { validateOrder } = require('../utils/validators');
 
-// All order routes require authentication
 router.use(isAuth);
 
-// Create new order
-router.post('/', validateOrder, orderController.createOrder);
+// Create order
+router.post('/', orderController.createOrder);
 
-// Get user's orders
+// Get all orders for user
 router.get('/', orderController.getOrders);
 
-// Get specific order
+// Get single order
 router.get('/:id', orderController.getOrderById);
 
-// Cancel order (if still possible)
-router.post('/:id/cancel', orderController.cancelOrder);
-
-// Track order status
-router.get('/:id/track', orderController.getOrderById);
+// Cancel order
+router.patch('/:id/cancel', orderController.cancelOrder);
 
 module.exports = router;

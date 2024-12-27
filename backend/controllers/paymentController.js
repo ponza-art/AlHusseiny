@@ -4,9 +4,10 @@ const logger = require('../utils/logger');
 
 exports.initiatePayment = async (req, res, next) => {
     try {
-        const { orderId } = req.body;
+        const { orderId, returnUrl } = req.body;
         const order = await Order.findById(orderId)
-            .populate('user', 'name email phone');
+            .populate('user', 'name email phone')
+            .populate('items.product', 'name');
 
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
@@ -21,23 +22,22 @@ exports.initiatePayment = async (req, res, next) => {
             order.totalAmount,
             order.items.map(item => ({
                 name: item.product.name,
-                amount_cents: item.price * 100,
-                quantity: item.quantity
+                amount_cents: Math.round(item.price * 100),
+                quantity: item.quantity,
+                description: `Order ${orderId}`
             }))
         );
 
-        // Create payment key
+        // Create payment key with return URL
         const billingData = {
             first_name: order.user.name.split(' ')[0],
-            last_name: order.user.name.split(' ').slice(1).join(' '),
+            last_name: order.user.name.split(' ').slice(1).join(' ') || 'NA',
             email: order.user.email,
-            phone_number: order.user.phone,
+            phone_number: order.shippingAddress.phone || 'NA',
             street: order.shippingAddress.street,
             city: order.shippingAddress.city,
             country: order.shippingAddress.country,
-            apartment: "NA",
-            floor: "NA",
-            postal_code: order.shippingAddress.zipCode,
+            postal_code: order.shippingAddress.zipCode || 'NA',
             state: order.shippingAddress.state
         };
 
@@ -45,7 +45,8 @@ exports.initiatePayment = async (req, res, next) => {
             authToken,
             paymobOrder.id,
             order.totalAmount,
-            billingData
+            billingData,
+            returnUrl // Pass return URL to PaymobService
         );
 
         // Update order with Paymob order ID
@@ -55,13 +56,12 @@ exports.initiatePayment = async (req, res, next) => {
         };
         await order.save();
 
-        // Return payment data
         res.json({
             paymentKey,
-            iframeId: PaymobService.iframeId
+            iframeId: PaymobService.IFRAME_ID
         });
     } catch (error) {
-        logger.error('Payment initiation error:', error);
+        console.error('Payment initiation error:', error);
         next(error);
     }
 };

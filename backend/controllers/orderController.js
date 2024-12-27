@@ -114,6 +114,9 @@ exports.cancelOrder = async (req, res, next) => {
         order.orderStatus = 'CANCELLED';
         await order.save();
 
+        // Populate product details for response
+        await order.populate('items.product', 'name images');
+        
         res.json(order);
     } catch (error) {
         next(error);

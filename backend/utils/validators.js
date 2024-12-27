@@ -59,14 +59,14 @@ exports.validateProduct = (product) => {
     return schema.validate(product);
 };
 
-exports.validatePayment = (data) => {
-    const schema = Joi.object({
-        orderId: Joi.string().required(),
-        paymentMethod: Joi.string()
-            .valid('CARD', 'CASH', 'WALLET')
-            .required()
-    });
-    return schema.validate(data);
+exports.validatePayment = (req, res, next) => {
+    const { orderId } = req.body;
+    
+    if (!orderId) {
+        return res.status(400).json({ message: 'Order ID is required' });
+    }
+    
+    next();
 };
 
 exports.validateOrder = (req, res, next) => {

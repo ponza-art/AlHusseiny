@@ -15,6 +15,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const logger = require("./utils/logger");
@@ -26,6 +27,7 @@ const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cors({
+    origin: 'http://localhost:5174',
     credentials: true
 }));
 
@@ -65,6 +67,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
